@@ -106,12 +106,13 @@ public extension Swifter {
                    safariDelegate: SFSafariViewControllerDelegate? = nil,
                    success: TokenSuccessHandler?,
                    failure: FailureHandler? = nil) {
-        self.postOAuthRequestToken(with: callbackURL, success: { token, response in
-            self.swifterCallbackToken = NotificationCenter.default.addObserver(forName: .swifterCallback, object: nil, queue: .main) { notification in
-                self.swifterCallbackToken = nil
+        self.postOAuthRequestToken(with: callbackURL, success: { [weak self, presenting] token, response in
+            guard let self else { return }
+            self.swifterCallbackToken = NotificationCenter.default.addObserver(forName: .swifterCallback, object: nil, queue: .main) { [weak self] notification in
+                self?.swifterCallbackToken = nil
                 presenting?.presentedViewController?.dismiss(animated: true, completion: nil)
                 let url = notification.userInfo![CallbackNotification.optionsURLKey] as! URL
-                self.postOAuthAccessTokenHelper(requestToken: token!, responseURL: url, success: success, failure: failure)
+                self?.postOAuthAccessTokenHelper(requestToken: token!, responseURL: url, success: success, failure: failure)
             }
 
             let queryURL = self.makeQueryURL(tokenKey: token!.key, forceLogin: forceLogin)
